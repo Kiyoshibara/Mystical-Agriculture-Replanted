@@ -139,7 +139,7 @@ public class HarvesterTileEntity extends BaseInventoryTileEntity implements Menu
 
             try (var tx = Transaction.openRoot()) {
                 if (tile.fuelLeft <= 0 && !fuel.isEmpty()) {
-                    tile.fuelItemValue = fuel.toStack().getBurnTime(null, level.fuelValues());
+                    tile.fuelItemValue = com.blakebr0.mysticalagriculture.util.CookingFuelHelper.getBurnTime(level, pos, tile, fuel.toStack());
 
                     if (tile.fuelItemValue > 0) {
                         tile.fuelLeft = tile.fuelItemValue *= FUEL_TICK_MULTIPLIER;
@@ -333,11 +333,11 @@ public class HarvesterTileEntity extends BaseInventoryTileEntity implements Menu
     public static CItemStacksHandler createInventoryHandler(@Nullable OnContentsChangedFunction onContentsChanged, Supplier<Level> level) {
         return CItemStacksHandler.create(16, onContentsChanged, builder -> {
             builder.setCanInsert((slot, resource) -> switch (slot) {
-                case FUEL_SLOT -> level.get() != null && level.get().fuelValues().isFuel(resource.toStack());
+                case FUEL_SLOT -> level.get() != null && resource.toStack().has(net.minecraft.core.component.DataComponents.COOKING_FUEL);
                 default -> false;
             });
             builder.setCanExtract(slot -> switch (slot) {
-                case FUEL_SLOT -> level.get() == null || !level.get().fuelValues().isFuel(builder.getResource(slot).toStack());
+                case FUEL_SLOT -> level.get() == null || !builder.getResource(slot).toStack().has(net.minecraft.core.component.DataComponents.COOKING_FUEL);
                 default -> true;
             });
         });

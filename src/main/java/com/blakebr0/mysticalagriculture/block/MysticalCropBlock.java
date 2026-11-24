@@ -19,6 +19,7 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.BonemealSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
@@ -38,7 +39,7 @@ public class MysticalCropBlock extends CropBlock implements ICropProvider {
     }
 
     @Override
-    public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state) {
+    public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
         return false;
     }
 
@@ -100,20 +101,20 @@ public class MysticalCropBlock extends CropBlock implements ICropProvider {
     }
 
     @Override
-    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state) {
+    public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state, BonemealSource source) {
         if (!this.canGrow(level, pos))
             return;
 
-        super.performBonemeal(level, random, pos, state);
+        super.performBonemeal(level, random, pos, state, source);
     }
 
     @Override
-    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state) {
+    public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state, BonemealSource source) {
         if (level instanceof Level) {
-            return this.canGrow((Level) level, pos) && super.isValidBonemealTarget(level, pos, state);
+            return this.canGrow((Level) level, pos) && super.isValidBonemealTarget(level, pos, state, source);
         }
 
-        return super.isValidBonemealTarget(level, pos, state);
+        return super.isValidBonemealTarget(level, pos, state, source);
     }
 
     @Override

@@ -53,7 +53,7 @@ public class OreInfuserContainer extends BaseContainerMenu {
         this.mover.after(5)
                 .add((slot, stack, player) -> stack.getItem() instanceof IMachineUpgrade, 0, 1) // machine upgrade
                 .add((slot, stack, player) -> isRecipeInput(stack), 1, 2) // inputs
-                .add((slot, stack, player) -> stack.getBurnTime(null, player.level().fuelValues()) > 0, 4, 1) // fuel
+                .add((slot, stack, player) -> stack.has(net.minecraft.core.component.DataComponents.COOKING_FUEL), 4, 1) // fuel
                 .add((slot, stack, player) -> slot < this.slots.size() - 4, this.slots.size() - 4, 9) // hotbar
                 .add((slot, stack, player) -> slot >= this.slots.size() - 4, this.slots.size() - 31, 27); // inventory
         this.mover.fallback(5, 36);

@@ -1,16 +1,17 @@
+
 plugins {
     id 'java-library'
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.141'
+    id 'net.neoforged.moddev' version '2.0.148'
 }
 
-version = '26.1.2-9.0.11'
+version = mod_version
 group = 'com.blakebr0.mysticalagriculture'
 
 base {
-    archivesName = 'MysticalAgriculture'
+    archivesName = "Mystical-Agriculture-Replanted-${minecraft_version}"
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
@@ -18,16 +19,21 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 
 repositories {
-    maven { url 'https://maven.blakesmods.com' }
+    mavenLocal {
+        content {
+            includeModule 'com.blakebr0.cucumber', 'Cucumber'
+        }
+    }
+
     maven { url 'https://maven.blamejared.com' }
     maven { url 'https://maven.tterrag.com' }
+
     maven {
         url 'https://cursemaven.com'
         content {
             includeGroup 'curse.maven'
         }
     }
-    mavenLocal()
 }
 
 tasks.register('syncTestDatapacks', Sync) {
@@ -66,7 +72,13 @@ neoForge {
         data {
             clientData()
 
-            programArguments.addAll '--mod', 'mysticalagriculture', '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+            programArguments.addAll '--mod',
+                    'mysticalagriculture',
+                    '--all',
+                    '--output',
+                    file('src/generated/resources/').getAbsolutePath(),
+                    '--existing',
+                    file('src/main/resources/').getAbsolutePath()
         }
 
         configureEach {
@@ -74,6 +86,7 @@ neoForge {
             systemProperty 'terminal.jline', 'true'
             logLevel = org.slf4j.event.Level.DEBUG
             ideName = "MysticalAgriculture - ${it.ideName.get()}"
+
             taskBefore tasks.named('syncTestDatapacks')
             taskBefore tasks.named('syncTestScripts')
         }
@@ -93,16 +106,19 @@ configurations {
 sourceSets.main.resources {
     srcDirs 'src/generated/resources'
     exclude '.cache'
+    exclude '**/.cache/**'
+    exclude '**/*.bak'
 }
 
 dependencies {
     implementation "com.blakebr0.cucumber:Cucumber:${cucumber_version}"
 
     implementation "curse.maven:jade-324717:${jade_version}"
-//  implementation "curse.maven:the-one-probe-245211:${top_version}"
-//  implementation "com.blamejared.crafttweaker:CraftTweaker-neoforge-${crafttweaker_version}"
 
-    runtimeOnly "vazkii.patchouli:patchouli-neoforge:${patchouli_version}"
+    // Patchouli integration is temporarily disabled
+    // due to Minecraft 26.3 incompatibility.
+    // runtimeOnly "vazkii.patchouli:patchouli-neoforge:${patchouli_version}"
+
     runtimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
 
     compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
@@ -124,10 +140,14 @@ artifacts {
 }
 
 tasks.withType(ProcessResources).configureEach {
+    exclude '**/*.bak'
+    exclude '**/.cache/**'
+
     var replaceProperties = [
-            mod_version            : version.split('-').last(),
-            cucumber_version       : cucumber_version.split('-').last(),
+        mod_version: project.version.toString(),
+        cucumber_version: cucumber_version
     ]
+
     inputs.properties replaceProperties
 
     filesMatching(['META-INF/neoforge.mods.toml']) {
@@ -141,21 +161,6 @@ publishing {
             from components.java
         }
     }
-
-    repositories {
-        maven {
-            url = 'https://maven.blakesmods.com'
-
-            credentials {
-                username = System.getenv('BLAKESMODS_MAVEN_USERNAME')
-                password = System.getenv('BLAKESMODS_MAVEN_PASSWORD')
-            }
-
-            authentication {
-                basic(BasicAuthentication)
-            }
-        }
-    }
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -166,5 +171,14 @@ idea {
     module {
         downloadSources = true
         downloadJavadoc = true
+    }
+}
+
+tasks.withType(Jar).configureEach {
+    exclude '**/*.bak'
+    exclude '**/.cache/**'
+
+    from('LICENSE') {
+        into('META-INF')
     }
 }

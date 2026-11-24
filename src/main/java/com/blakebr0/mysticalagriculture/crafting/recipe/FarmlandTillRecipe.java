@@ -22,7 +22,8 @@ import net.minecraft.world.item.crafting.display.RecipeDisplay;
 import net.minecraft.world.item.crafting.display.ShapelessCraftingRecipeDisplay;
 import net.minecraft.world.item.crafting.display.SlotDisplay;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.common.ItemAbilities;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.BlockTransformers;
 import net.neoforged.neoforge.common.util.RecipeMatcher;
 
 import java.util.Arrays;
@@ -73,7 +74,8 @@ public class FarmlandTillRecipe implements CraftingRecipe {
         for (int i = 0; i < inventory.size(); i++) {
             var stack = inventory.getItem(i);
 
-            if (stack.is(ItemTags.HOES) || stack.canPerformAction(ItemAbilities.HOE_TILL)) {
+            var transformer = stack.get(DataComponents.BLOCK_TRANSFORMER);
+            if (stack.is(ItemTags.HOES) || (transformer != null && transformer.is(BlockTransformers.HOE))) {
                 var hoe = stack.copy();
 
                 if (hoe.isDamageableItem()) {

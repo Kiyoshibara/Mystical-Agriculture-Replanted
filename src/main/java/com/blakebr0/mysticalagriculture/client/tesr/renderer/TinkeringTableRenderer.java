@@ -49,8 +49,8 @@ public class TinkeringTableRenderer implements BlockEntityRenderer<TinkeringTabl
             float scale = 0.7F;
             matrix.scale(scale, scale, scale);
             int index = state.facing.get2DDataValue();
-            matrix.mulPose(Axis.YP.rotationDegrees(-90 * index));
-            matrix.mulPose(Axis.XP.rotationDegrees(90));
+            matrix.rotateDegrees(Axis.YP, -90 * index);
+            matrix.rotateDegrees(Axis.XP, 90);
             state.itemRenderState.submit(matrix, submitNodeCollector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
             matrix.popPose();
         }

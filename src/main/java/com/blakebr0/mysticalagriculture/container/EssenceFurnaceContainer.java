@@ -67,7 +67,7 @@ public class EssenceFurnaceContainer extends BaseContainerMenu {
                     if (!this.moveItemStackTo(itemstack1, 1, 2, false)) {
                         return ItemStack.EMPTY;
                     }
-                } else if (itemstack1.getBurnTime(null, player.level().fuelValues()) > 0) {
+                } else if (itemstack1.has(net.minecraft.core.component.DataComponents.COOKING_FUEL)) {
                     if (!this.moveItemStackTo(itemstack1, 2, 3, false)) {
                         return ItemStack.EMPTY;
                     }

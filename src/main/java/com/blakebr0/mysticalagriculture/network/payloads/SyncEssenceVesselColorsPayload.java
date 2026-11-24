@@ -23,12 +23,12 @@ public record SyncEssenceVesselColorsPayload(Map<String, Integer> colors) implem
     }
 
     private static SyncEssenceVesselColorsPayload fromNetwork(RegistryFriendlyByteBuf buffer) {
-        var colors = buffer.readMap(FriendlyByteBuf::readUtf, FriendlyByteBuf::readVarInt);
+        var colors = buffer.readMap(FriendlyByteBuf::readUtf, (buf, key) -> buf.readVarInt());
         return new SyncEssenceVesselColorsPayload(colors);
     }
 
     private static void toNetwork(RegistryFriendlyByteBuf buffer, SyncEssenceVesselColorsPayload payload) {
-        buffer.writeMap(payload.colors, FriendlyByteBuf::writeUtf, FriendlyByteBuf::writeVarInt);
+        buffer.writeMap(payload.colors, FriendlyByteBuf::writeUtf, (buf, key, value) -> buf.writeVarInt(value));
     }
 
     public static void handleClient(SyncEssenceVesselColorsPayload payload, IPayloadContext context) {

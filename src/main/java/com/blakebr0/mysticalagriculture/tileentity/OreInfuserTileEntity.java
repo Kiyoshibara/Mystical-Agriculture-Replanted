@@ -150,7 +150,7 @@ public class OreInfuserTileEntity extends BaseInventoryTileEntity implements Men
 
             try (var tx = Transaction.openRoot()) {
                 if (tile.fuelLeft <= 0 && !fuel.isEmpty()) {
-                    tile.fuelItemValue = fuel.toStack().getBurnTime(null, level.fuelValues());
+                    tile.fuelItemValue = com.blakebr0.mysticalagriculture.util.CookingFuelHelper.getBurnTime(level, pos, tile, fuel.toStack());
 
                     if (tile.fuelItemValue > 0) {
                         tile.fuelLeft = tile.fuelItemValue *= FUEL_TICK_MULTIPLIER;
@@ -294,7 +294,7 @@ public class OreInfuserTileEntity extends BaseInventoryTileEntity implements Men
         if (slot == INPUT_SLOTS[1] && direction == Direction.UP)
             return RecipeIngredientCache.INSTANCE.isValidInput(stack, ModRecipeTypes.ORE_INFUSION.get());
         if (slot == FUEL_SLOT && direction == Direction.NORTH)
-            return this.level != null && this.level.fuelValues().isFuel(stack);
+            return this.level != null && stack.has(net.minecraft.core.component.DataComponents.COOKING_FUEL);
 
         return false;
     }
@@ -306,12 +306,12 @@ public class OreInfuserTileEntity extends BaseInventoryTileEntity implements Men
     public static CItemStacksHandler createInventoryHandler(@Nullable OnContentsChangedFunction onContentsChanged, Supplier<Level> level) {
         return CItemStacksHandler.create(4, onContentsChanged, builder -> {
             builder.setCanInsert((slot, resource) -> switch (slot) {
-                case FUEL_SLOT -> level.get() != null && level.get().fuelValues().isFuel(resource.toStack());
+                case FUEL_SLOT -> level.get() != null && resource.toStack().has(net.minecraft.core.component.DataComponents.COOKING_FUEL);
                 case OUTPUT_SLOT -> false;
                 default -> true;
             });
             builder.setCanExtract(slot -> switch (slot) {
-                case FUEL_SLOT -> level.get() == null || !level.get().fuelValues().isFuel(builder.getResource(slot).toStack());
+                case FUEL_SLOT -> level.get() == null || !builder.getResource(slot).toStack().has(net.minecraft.core.component.DataComponents.COOKING_FUEL);
                 case OUTPUT_SLOT -> true;
                 default -> false;
             });

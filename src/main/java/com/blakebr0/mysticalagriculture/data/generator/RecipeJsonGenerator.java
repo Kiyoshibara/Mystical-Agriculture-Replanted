@@ -10,12 +10,15 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
+import net.minecraft.data.worldgen.BootstrapContext;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.world.item.crafting.Recipe;
 
 import java.util.concurrent.CompletableFuture;
 
 public class RecipeJsonGenerator extends RecipeProvider {
-    public RecipeJsonGenerator(HolderLookup.Provider lookup, RecipeOutput output) {
-        super(lookup, output);
+    public RecipeJsonGenerator(BootstrapContext<Recipe<?>> recipes, BootstrapContext<Advancement> advancements) {
+        super(recipes, advancements, MysticalAgriculture.MOD_ID);
     }
 
     @Override
@@ -37,22 +40,6 @@ public class RecipeJsonGenerator extends RecipeProvider {
                 var id = MysticalAgriculture.resource("seed/reprocessor/" + crop.getName());
                 ReprocessorRecipeBuilder.seed(id, crop).save(this.output);
             }
-        }
-    }
-
-    public static class Runner extends RecipeProvider.Runner {
-        public Runner(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider) {
-            super(output, lookupProvider);
-        }
-
-        @Override
-        protected RecipeProvider createRecipeProvider(HolderLookup.Provider provider, RecipeOutput output) {
-            return new RecipeJsonGenerator(provider, output);
-        }
-
-        @Override
-        public String getName() {
-            return MysticalAgriculture.NAME + " recipe generator";
         }
     }
 }

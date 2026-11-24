@@ -10,11 +10,9 @@
           "name": "mysticalagriculture:soulstone_cracked_bricks"
         }
       ],
-      "conditions": [
-        {
-          "condition": "minecraft:survives_explosion"
-        }
-      ]
+      "condition": {
+        "type": "minecraft:survives_explosion"
+      }
     }
   ]
 }

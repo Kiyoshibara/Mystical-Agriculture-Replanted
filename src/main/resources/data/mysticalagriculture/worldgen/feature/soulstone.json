@@ -1,0 +1,16 @@
+{
+  "type": "mysticalagriculture:soulstone",
+  "discard_chance_on_air_exposure": 0.0,
+  "size": 64,
+  "targets": [
+    {
+      "state": {
+        "id": "mysticalagriculture:soulstone"
+      },
+      "target": {
+        "block": "minecraft:netherrack",
+        "predicate_type": "minecraft:block_match"
+      }
+    }
+  ]
+}

@@ -48,10 +48,15 @@ import net.neoforged.neoforge.transfer.transaction.Transaction;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 public class SouliumSpawnerTileEntity extends BaseInventoryTileEntity implements MenuProvider, IUpgradeableMachine {
+    // Preview entities are never added to the world, so Minecraft does not assign IDs to them.
+    private static final AtomicInteger NEXT_DISPLAY_ENTITY_ID = new AtomicInteger(-1);
+
     private static final int INPUT_SLOT = 0;
     private static final int FUEL_SLOT = 1;
 
@@ -188,7 +193,7 @@ public class SouliumSpawnerTileEntity extends BaseInventoryTileEntity implements
 
             try (var tx = Transaction.openRoot()) {
                 if (tile.fuelLeft <= 0 && !fuel.isEmpty()) {
-                    tile.fuelItemValue = fuel.toStack().getBurnTime(null, level.fuelValues());
+                    tile.fuelItemValue = com.blakebr0.mysticalagriculture.util.CookingFuelHelper.getBurnTime(level, pos, tile, fuel.toStack());
 
                     if (tile.fuelItemValue > 0) {
                         tile.fuelLeft = tile.fuelItemValue *= FUEL_TICK_MULTIPLIER;
@@ -301,11 +306,11 @@ public class SouliumSpawnerTileEntity extends BaseInventoryTileEntity implements
         return CItemStacksHandler.create(2, onContentsChanged, builder -> {
             builder.addSlotLimit(INPUT_SLOT, 512);
             builder.setCanInsert((slot, resource) -> switch (slot) {
-                case FUEL_SLOT -> level.get() != null && level.get().fuelValues().isFuel(resource.toStack());
+                case FUEL_SLOT -> level.get() != null && resource.toStack().has(net.minecraft.core.component.DataComponents.COOKING_FUEL);
                 default -> true;
             });
             builder.setCanExtract(slot -> switch (slot) {
-                case FUEL_SLOT -> level.get() == null || !level.get().fuelValues().isFuel(builder.getResource(slot).toStack());
+                case FUEL_SLOT -> level.get() == null || !builder.getResource(slot).toStack().has(net.minecraft.core.component.DataComponents.COOKING_FUEL);
                 default -> false;
             });
         });
@@ -354,7 +359,7 @@ public class SouliumSpawnerTileEntity extends BaseInventoryTileEntity implements
     }
 
     public DisplayEntity getDisplayEntity() {
-        if (this.displayEntities == null)
+        if (this.displayEntities == null || this.displayEntities.length == 0)
             return null;
 
         var index = Math.toIntExact((System.currentTimeMillis() / 2000L) % this.displayEntities.length);
@@ -378,7 +383,7 @@ public class SouliumSpawnerTileEntity extends BaseInventoryTileEntity implements
         if (entity == null)
             return false;
 
-        var entities = this.level.getEntitiesOfClass(entity.getClass(), AABB.ofSize(this.getBlockPos().getCenter(), SPAWN_RADIUS * 2, SPAWN_RADIUS * 2, SPAWN_RADIUS * 2))
+        var entities = this.level.getEntitiesOfClass(entity.getClass(), AABB.ofSize(net.minecraft.world.phys.Vec3.atCenterOf(this.getBlockPos()), SPAWN_RADIUS * 2, SPAWN_RADIUS * 2, SPAWN_RADIUS * 2))
                 .stream()
                 .filter(Entity::isAlive)
                 .count();
@@ -461,10 +466,17 @@ public class SouliumSpawnerTileEntity extends BaseInventoryTileEntity implements
 
             this.displayEntities = entities
                     .stream()
-                    .map(e -> new DisplayEntity(
-                            e.value().create(this.level, EntitySpawnReason.SPAWNER),
-                            ((double) e.weight() / totalWeight) * 100D)
-                    )
+                    .map(e -> {
+                        var entity = e.value().create(this.level, EntitySpawnReason.SPAWNER);
+                        if (entity == null)
+                            return null;
+
+                        // Minecraft 26.3 render-state extraction reads Entity.getId().
+                        // Give each client-side preview an ID without spawning it into the world.
+                        entity.setId(NEXT_DISPLAY_ENTITY_ID.getAndDecrement());
+                        return new DisplayEntity(entity, ((double) e.weight() / totalWeight) * 100D);
+                    })
+                    .filter(Objects::nonNull)
                     .toArray(DisplayEntity[]::new);
         } else {
             this.displayEntities = null;
@@ -507,7 +519,7 @@ public class SouliumSpawnerTileEntity extends BaseInventoryTileEntity implements
         if (slot == INPUT_SLOT && direction == Direction.UP)
             return RecipeIngredientCache.INSTANCE.isValidSouliumSpawnerInput(stack);
         if (slot == FUEL_SLOT && direction == Direction.NORTH)
-            return this.level != null && this.level.fuelValues().isFuel(stack);
+            return this.level != null && stack.has(net.minecraft.core.component.DataComponents.COOKING_FUEL);
 
         return false;
     }

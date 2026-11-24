@@ -7,8 +7,7 @@ import com.blakebr0.mysticalagriculture.network.payloads.UpdateAOEAugmentOffsetP
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.ShapeRenderer;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.BlockOutlineRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
@@ -39,7 +38,7 @@ public final class AOEAugmentClientHandler {
         var window = minecraft.getWindow();
 
         // do anything only if control is pressed
-        if (!InputConstants.isKeyDown(window, InputConstants.KEY_RCONTROL) && !InputConstants.isKeyDown(window, InputConstants.KEY_LCONTROL))
+        if (!InputConstants.isKeyDown(InputConstants.KEY_RCONTROL) && !InputConstants.isKeyDown(InputConstants.KEY_LCONTROL))
             return;
 
         int range = AugmentUtils.getMaxAOEAugmentRange(stack);
@@ -49,13 +48,13 @@ public final class AOEAugmentClientHandler {
         int horizontalOffsetChange = 0;
         int verticalOffsetChange = 0;
 
-        if (InputConstants.isKeyDown(window, InputConstants.KEY_LEFT)) {
+        if (InputConstants.isKeyDown(InputConstants.KEY_LEFT)) {
             horizontalOffsetChange = -1;
-        } else if (InputConstants.isKeyDown(window, InputConstants.KEY_RIGHT)) {
+        } else if (InputConstants.isKeyDown(InputConstants.KEY_RIGHT)) {
             horizontalOffsetChange = 1;
-        } else if (InputConstants.isKeyDown(window, InputConstants.KEY_DOWN)) {
+        } else if (InputConstants.isKeyDown(InputConstants.KEY_DOWN)) {
             verticalOffsetChange = -1;
-        } else if (InputConstants.isKeyDown(window, InputConstants.KEY_UP)) {
+        } else if (InputConstants.isKeyDown(InputConstants.KEY_UP)) {
             verticalOffsetChange = 1;
         }
 
@@ -84,7 +83,7 @@ public final class AOEAugmentClientHandler {
 
         var window = Minecraft.getInstance().getWindow();
 
-        if (!InputConstants.isKeyDown(window, InputConstants.KEY_RCONTROL) && !InputConstants.isKeyDown(window, InputConstants.KEY_LCONTROL))
+        if (!InputConstants.isKeyDown(InputConstants.KEY_RCONTROL) && !InputConstants.isKeyDown(InputConstants.KEY_LCONTROL))
             return;
 
         int range = AugmentUtils.getMaxAOEAugmentRange(stack);
@@ -99,23 +98,26 @@ public final class AOEAugmentClientHandler {
     record AOEOutlineRenderer(Player player, ItemStack stack, int range,
                               BlockHitResult hitResult) implements CustomBlockOutlineRenderer {
         @Override
-        public boolean render(BlockOutlineRenderState renderState, MultiBufferSource.BufferSource buffer, PoseStack poseStack, boolean translucentPass, LevelRenderState levelRenderState) {
+        public boolean render(BlockOutlineRenderState renderState, SubmitNodeCollector collector, PoseStack poseStack, LevelRenderState levelRenderState) {
             float red = player.isCrouching() ? 1.0F : 0.0F;
             float green = player.isCrouching() ? 0.5F : 1.0F;
             float blue = 0.0F;
             float alpha = 0.7F;
 
             var direction = player.isCrouching() ? Direction.UP : hitResult.getDirection();
-            var vertexConsumer = buffer.getBuffer(RenderTypes.lines());
             var camPos = levelRenderState.cameraRenderState.pos;
-            var width = Minecraft.getInstance().gameRenderer.getGameRenderState().windowRenderState.appropriateLineWidth;
+            int color = ARGB.colorFromFloat(alpha, red, green, blue);
+            float width = 2.0F;
 
             AOEAugment.getAOEBlocks(stack, range, hitResult.getBlockPos(), direction, player).forEach(aoePos -> {
                 var state = player.level().getBlockState(aoePos);
                 if (state.isAir())
                     return;
 
-                ShapeRenderer.renderShape(poseStack, vertexConsumer, Shapes.block(), aoePos.getX() - camPos.x, aoePos.getY() - camPos.y, aoePos.getZ() - camPos.z, ARGB.colorFromFloat(alpha, red, green, blue), width);
+                poseStack.pushPose();
+                poseStack.translate(aoePos.getX() - camPos.x, aoePos.getY() - camPos.y, aoePos.getZ() - camPos.z);
+                collector.submitShapeOutline(poseStack, Shapes.block(), RenderTypes.lines(), color, width, false);
+                poseStack.popPose();
             });
 
             return true;
