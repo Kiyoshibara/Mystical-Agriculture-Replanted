@@ -13,7 +13,7 @@ This project focuses on compatibility with newer Minecraft and NeoForge versions
 ## Port Changes
 
 - Updated to Minecraft 26.3.
-- Updated to NeoForge 26.3 and Java 25.
+- Updated to NeoForge 26.3 and NeoForge APIs while maintaining Java 25 compatibility.
 - Migrated outdated Minecraft and NeoForge APIs.
 - Updated crop models, item models, and generated resources.
 - Updated crafting recipes and loot tables.
